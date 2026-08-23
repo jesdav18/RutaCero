@@ -14,10 +14,11 @@ button:disabled { opacity:.55; cursor:not-allowed; }
 .brand-panel { padding:10vw; display:flex; flex-direction:column; justify-content:center; background:#163c2b; color:white; }
 .brand-panel h1 { max-width:580px; font-size:clamp(2.8rem,5vw,5.7rem); letter-spacing:-.06em; line-height:.98; margin:1.4rem 0; }
 .brand-panel p { max-width:500px; color:#c7d8ce; font-size:1.15rem; line-height:1.6; }
-.eyebrow { color:#5aa374; font-weight:700; font-size:.74rem; letter-spacing:.16em; }
+.auth-brand{color:white;font-family:'Manrope',sans-serif;font-size:1.25rem;font-weight:600;letter-spacing:-.02em}.auth-brand strong{color:#70c28d}
 .auth-card { width:min(440px,82%); margin:auto; }
 .auth-card h2 { font-size:2.1rem; margin:0 0 .4rem; }
 .auth-card form { display:grid; gap:1.2rem; margin:2rem 0 1.2rem; }
+.password-field{position:relative;display:block}.password-field input{padding-right:3.25rem}.password-toggle{position:absolute;top:50%;right:.45rem;transform:translateY(-50%);display:grid;place-items:center;width:40px;height:40px;padding:0;border-radius:8px;background:transparent;color:var(--muted)}.password-toggle:hover{background:#edf1ec;color:var(--green)}.password-toggle svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.app-version{display:block;margin-top:2rem;color:var(--muted);font-size:.75rem;text-align:center}
 label { display:grid; gap:.5rem; font-weight:600; font-size:.9rem; }
 input,select { width:100%; border:1px solid var(--line); border-radius:9px; padding:.9rem; background:white; font:inherit; }
 .field-help{color:var(--muted);font-size:.78rem;font-weight:400;line-height:1.4}.confirmation-help{margin-top:-.65rem}

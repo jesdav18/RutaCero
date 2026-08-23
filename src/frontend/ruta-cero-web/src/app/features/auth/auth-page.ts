@@ -10,10 +10,13 @@ export class AuthPage {
   readonly isRegister = inject(ActivatedRoute).snapshot.data['register'] === true;
   readonly error = signal('');
   readonly pending = signal(false);
+  readonly showPassword = signal(false);
+  readonly appVersion = '1.0.0';
   readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
     password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(12)] })
   });
+  togglePasswordVisibility() { this.showPassword.update(value => !value); }
   submit() {
     if (this.form.invalid) return;
     this.pending.set(true); this.error.set('');
