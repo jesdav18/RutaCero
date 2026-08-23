@@ -13,6 +13,7 @@ internal static class TransactionConfiguration
         item.Property(x=>x.FinancialAccountId).HasColumnName("financial_account_id");
         item.Property(x=>x.RelatedFinancialAccountId).HasColumnName("related_financial_account_id");
         item.Property(x=>x.DebtId).HasColumnName("debt_id");
+        item.Property(x=>x.RecurringCommitmentId).HasColumnName("recurring_commitment_id");
         item.Property(x=>x.CategoryId).HasColumnName("category_id");item.Property(x=>x.Type).HasColumnName("transaction_type").HasConversion<string>();
         item.Ignore(x=>x.Amount);item.Ignore(x=>x.CountsAsExpense);item.Property<decimal>("_amount").HasColumnName("amount").HasPrecision(18,2);
         item.Property<Currency>("_currency").HasColumnName("currency").HasConversion<string>();
@@ -21,6 +22,7 @@ internal static class TransactionConfiguration
         item.Property(x=>x.TransferGroupId).HasColumnName("transfer_group_id");
         item.Property(x=>x.TransferDirection).HasColumnName("transfer_direction").HasConversion<string>();
         item.HasIndex(x=>x.DebtId);
+        item.HasIndex(x=>x.RecurringCommitmentId);
         var category=builder.Entity<TransactionCategory>();category.ToTable("transaction_categories");category.HasKey(x=>x.Id);
         category.Property(x=>x.Id).HasColumnName("id");category.Property(x=>x.UserId).HasColumnName("user_id");
         category.Property(x=>x.Name).HasColumnName("name");category.Property(x=>x.IsIncome).HasColumnName("is_income");

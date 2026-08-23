@@ -1,6 +1,6 @@
 <app-header></app-header>
 <main class="page debts-page">
-  <div class="heading"><div><span class="eyebrow">RUTA A CERO</span><h1>Deudas</h1><p>Solo el capital confirmado reduce el saldo.</p></div><button (click)="toggleForm()">Nueva deuda</button></div>
+  <div class="heading"><div><h1>Deudas</h1><p>Solo el capital confirmado reduce el saldo.</p></div><button (click)="toggleForm()">Nueva deuda</button></div>
   @if(notice()){<div class="success">{{notice()}}</div>}
   @if(error()){<div class="error">{{error()}}</div>}
   @if(showForm()){
@@ -45,7 +45,7 @@
     </div>
   </form></div>}
   @if(paymentFor()){<div class="modal"><form class="panel payment-form" [formGroup]="payment" (ngSubmit)="pay()">
-    <div class="debt-title"><h2>Pago a {{paymentFor()!.name}}</h2><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="paymentFor.set(null)"><span aria-hidden="true">&times;</span></button></div>
+    <div class="debt-title"><span class="eyebrow">PAGO A {{paymentFor()!.name}}</span><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="paymentFor.set(null)"><span aria-hidden="true">&times;</span></button></div>
     <label>Fecha<input type="date" formControlName="paymentDate"><small class="field-help">Fecha en que realizaste el pago.</small></label>
     <label>Monto total<input type="number" formControlName="totalAmount" placeholder="Ej. 5000.00"><small class="field-help">Si pagaste L 5,000.00 al banco, escribe 5000 aquí.</small></label>
     <label>Capital confirmado<input type="number" formControlName="principalAmount" placeholder="Ej. 3800.00"><small class="field-help">Escribe solo lo que redujo la deuda. Ejemplo: de L 5,000.00 pagados, el banco aplicó L 3,800.00 a capital.</small></label>

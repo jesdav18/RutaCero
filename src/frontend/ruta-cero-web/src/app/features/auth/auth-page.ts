@@ -17,7 +17,13 @@ export class AuthPage {
   });
   togglePasswordVisibility() { this.showPassword.update(value => !value); }
   submit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      if(this.form.controls.email.invalid)this.error.set('Ingresa un correo electrónico válido.');
+      else if(this.isRegister&&this.form.controls.password.hasError('minlength'))this.error.set('La contraseña debe tener al menos 12 caracteres.');
+      else this.error.set('Ingresa tu contraseña.');
+      return;
+    }
     this.pending.set(true); this.error.set('');
     const { email, password } = this.form.getRawValue();
     const request = this.isRegister ? this.auth.register(email, password) : this.auth.login(email, password);

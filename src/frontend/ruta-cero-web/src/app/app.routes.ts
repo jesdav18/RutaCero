@@ -13,6 +13,8 @@ export const routes: Routes = [
   { path: 'calendario', canActivate: [authGuard], loadComponent: () => import('./features/payment-calendar/payment-calendar-page').then(x => x.PaymentCalendarPage) },
   { path: 'importaciones', canActivate: [authGuard], loadComponent: () => import('./features/statement-imports/statement-imports-page').then(x => x.StatementImportsPage) },
   { path: 'planeacion', canActivate: [authGuard], loadComponent: () => import('./features/planning/planning-page').then(x => x.PlanningPage) },
+  { path: 'ingresos-esperados', canActivate: [authGuard], loadComponent: () => import('./features/expected-incomes/expected-incomes-page').then(x => x.ExpectedIncomesPage) },
+  { path: 'compromisos-recurrentes', canActivate: [authGuard], loadComponent: () => import('./features/recurring-commitments/recurring-commitments-page').then(x => x.RecurringCommitmentsPage) },
   { path: 'notificaciones', canActivate: [authGuard], loadComponent: () => import('./features/notifications/notifications-page').then(x => x.NotificationsPage) },
   { path: 'presupuesto', canActivate: [authGuard], loadComponent: () => import('./features/budgets/budgets-page').then(x => x.BudgetsPage) },
   { path: 'recomendaciones', canActivate: [authGuard], loadComponent: () => import('./features/recommendations/recommendations-page').then(x => x.RecommendationsPage) },

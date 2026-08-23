@@ -26,9 +26,10 @@
             }
           </button>
         </span>
+        @if (isRegister) { <small class="field-help">Usa al menos 12 caracteres.</small> }
       </label>
       @if (error()) { <div class="error">{{ error() }}</div> }
-      <button type="submit" [disabled]="form.invalid || pending()">{{ pending() ? 'Procesando…' : isRegister ? 'Crear cuenta' : 'Ingresar' }}</button>
+      <button type="submit" [disabled]="pending()">{{ pending() ? 'Procesando…' : isRegister ? 'Crear cuenta' : 'Ingresar' }}</button>
     </form>
     <div class="auth-meta">
       <p class="auth-switch">

@@ -1,16 +1,17 @@
 ﻿<app-header></app-header>
 <main class="page accounts-page">
-  <div class="heading"><div><span class="eyebrow">TU DINERO</span><h1>Cuentas</h1><p>Saldos confirmados y efectivo disponible por moneda.</p></div><button (click)="showForm.set(!showForm())">Nueva cuenta</button></div>
+  <div class="heading"><div><h1>Cuentas</h1><p>Saldos confirmados y efectivo disponible por moneda.</p></div><button (click)="openCreate()">Nueva cuenta</button></div>
   @if (error()) { <div class="error">{{ error() }}</div> }
+  @if (notice()) { <div class="success">{{ notice() }}</div> }
   @if (showForm()) {
-    <form class="panel account-form" [formGroup]="form" (ngSubmit)="save()">
+    <div class="modal"><section class="panel review account-create-modal"><div class="debt-title"><span class="eyebrow">NUEVA CUENTA</span><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="closeCreate()"><span aria-hidden="true">&times;</span></button></div>@if(modalError()){<div class="error">{{modalError()}}</div>}<form class="account-form" [formGroup]="form" (ngSubmit)="save()">
       <label>Institución<input formControlName="institutionName" /></label><label>Nombre visible<input formControlName="displayName" /></label>
       <label>Número de cuenta completo<input inputmode="numeric" autocomplete="off" formControlName="reference" /></label>
       <label>Tipo<select formControlName="type"><option value="CheckingAccount">Cuenta corriente</option><option value="SavingsAccount">Cuenta de ahorro</option><option value="Cash">Efectivo</option><option value="CreditCard">Tarjeta de crédito</option></select></label>
       <label>Saldo<input type="number" formControlName="balance" /></label><label>Moneda<select formControlName="currency"><option value="HNL">Lempiras (L)</option><option value="USD">Dólares ($)</option></select></label>
       <label>Fecha del saldo<input type="date" formControlName="balanceDate" /></label><label>Reserva mínima<input type="number" formControlName="minimumBuffer" /></label>
       <label class="check"><input type="checkbox" formControlName="isIncludedInAvailableCash" /> Incluir en efectivo disponible</label><button type="submit" [disabled]="form.invalid">Guardar cuenta</button>
-    </form>
+    </form></section></div>
   }
   <div class="data-grid accounts-grid"><table><thead><tr><th>Institución</th><th>Cuenta</th><th>Tipo</th><th>Referencia</th><th>Fecha</th><th>Moneda</th><th class="numeric">Saldo</th><th class="numeric">Reserva</th><th>Disponible</th><th>Acciones</th></tr></thead><tbody>
     @for(account of accounts();track account.id){<tr><td data-label="Institución">{{account.institutionName}}</td><td data-label="Cuenta"><strong>{{account.displayName}}</strong></td><td data-label="Tipo">{{typeLabel(account.type)}}</td><td data-label="Referencia">•••• {{account.reference}}</td><td data-label="Fecha">{{account.balanceDate}}</td><td data-label="Moneda">{{account.currency|currencySymbol}}</td><td data-label="Saldo" class="numeric"><strong>{{account.balance|moneyFormat:account.currency}}</strong></td><td data-label="Reserva" class="numeric">{{account.minimumBuffer|moneyFormat:account.currency}}</td><td data-label="Disponible">{{account.isIncludedInAvailableCash?'Sí':'No'}}</td><td data-label="Acciones"><div class="row-actions"><button class="icon-button" title="Ver historial de saldos" aria-label="Ver historial de saldos" (click)="openHistory(account)">👁</button><button class="icon-button" title="Editar cuenta" aria-label="Editar cuenta" (click)="edit(account)">✎</button></div></td></tr>}

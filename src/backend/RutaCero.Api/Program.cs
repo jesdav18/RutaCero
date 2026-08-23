@@ -104,6 +104,8 @@ await using (var scope = app.Services.CreateAsyncScope())
         create index if not exists ix_transactions_transfer_group on transactions(transfer_group_id)
             where transfer_group_id is not null;
         create index if not exists ix_transactions_debt_id on transactions(debt_id) where debt_id is not null;
+        alter table transactions add column if not exists recurring_commitment_id uuid references recurring_commitments(id) on delete set null;
+        create index if not exists ix_transactions_recurring_commitment_id on transactions(recurring_commitment_id) where recurring_commitment_id is not null;
         """);
     await db.Database.ExecuteSqlRawAsync("""
         alter table debts add column if not exists statement_closing_day integer check(statement_closing_day between 1 and 31);

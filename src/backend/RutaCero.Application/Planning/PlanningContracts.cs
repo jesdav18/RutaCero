@@ -11,7 +11,9 @@ public sealed record SettingsDto(decimal SafetyReserveAmount,SafetyReserveMode S
 public interface IPlanningRepository
 {
  Task<IReadOnlyList<ExpectedIncome>> ListIncomesAsync(Guid userId,CancellationToken token);Task AddIncomeAsync(ExpectedIncome item,CancellationToken token);
+ Task<ExpectedIncome?> FindIncomeAsync(Guid id,Guid userId,CancellationToken token);void RemoveIncome(ExpectedIncome item);
  Task<IReadOnlyList<RecurringCommitment>> ListCommitmentsAsync(Guid userId,CancellationToken token);Task AddCommitmentAsync(RecurringCommitment item,CancellationToken token);
+ Task<RecurringCommitment?> FindCommitmentAsync(Guid id,Guid userId,CancellationToken token);
  Task<IReadOnlyList<MonthlyBudget>> ListBudgetsAsync(Guid userId,int year,int month,CancellationToken token);Task UpsertBudgetAsync(MonthlyBudget item,CancellationToken token);
  Task<UserFinancialSettings?> GetSettingsAsync(Guid userId,CancellationToken token);Task UpsertSettingsAsync(UserFinancialSettings item,CancellationToken token);
 }

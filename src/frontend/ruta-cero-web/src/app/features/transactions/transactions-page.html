@@ -1,21 +1,22 @@
 <app-header></app-header>
 <main class="page transactions-page">
-  <div class="heading"><div><span class="eyebrow">FLUJO DE DINERO</span><h1>Movimientos</h1><p>Las transferencias y pagos de deuda no se cuentan otra vez como gasto.</p></div><div class="heading-actions"><button class="quiet bordered" (click)="showTypeSettings.set(true)">Configurar tipos</button><button (click)="openForm()">Nuevo movimiento</button></div></div>
+  <div class="heading"><div><h1>Movimientos</h1><p>Las transferencias y pagos de deuda no se cuentan otra vez como gasto.</p></div><div class="heading-actions"><button class="quiet bordered" (click)="showTypeSettings.set(true)">Configurar tipos</button><button (click)="openForm()">Nuevo movimiento</button></div></div>
   @if(notice()){<div class="success">{{notice()}}</div>} @if(error()){<div class="error">{{error()}}</div>}
   <div class="data-grid transactions-grid"><table>
-    <thead><tr><th>Fecha</th><th>Descripción</th><th>Cuenta</th><th>Categoría</th><th>Tipo</th><th>Moneda</th><th class="numeric">Monto</th><th>Acciones</th></tr></thead>
+    <thead><tr><th>Fecha</th><th>Descripción</th><th>Cuenta</th><th>Compromiso</th><th>Categoría</th><th>Tipo</th><th>Moneda</th><th class="numeric">Monto</th><th>Acciones</th></tr></thead>
     <tbody>@for(m of movements();track m.id){<tr>
-      <td data-label="Fecha">{{m.transactionDate}}</td><td data-label="Descripción"><strong>{{m.description}}</strong></td><td data-label="Cuenta">{{accountName(m.financialAccountId)}}</td><td data-label="Categoría">{{categoryName(m.categoryId)}}</td><td data-label="Tipo">{{typeLabel(m.type)}}</td><td data-label="Moneda">{{m.currency==='HNL'?'L':'$'}}</td>
+      <td data-label="Fecha">{{m.transactionDate}}</td><td data-label="Descripción"><strong>{{m.description}}</strong></td><td data-label="Cuenta">{{accountName(m.financialAccountId)}}</td><td data-label="Compromiso">{{commitmentName(m.recurringCommitmentId)}}</td><td data-label="Categoría">{{categoryName(m.categoryId)}}</td><td data-label="Tipo">{{typeLabel(m.type)}}</td><td data-label="Moneda">{{m.currency==='HNL'?'L':'$'}}</td>
       <td data-label="Monto" class="numeric"><strong [class.income]="effect(m.type)==='Positive'||m.transferDirection==='Incoming'" [class.neutral-amount]="effect(m.type)==='Neutral'&&!m.transferDirection">{{sign(m.type,m.transferDirection)}} {{m.amount|moneyFormat:m.currency}}</strong></td>
       <td data-label="Acciones"><div class="row-actions">@if(m.debtId){<span class="icon-button" title="Pago vinculado a una deuda" aria-label="Pago vinculado a una deuda">&#128274;</span>}@else{<button class="icon-button" title="Editar movimiento" aria-label="Editar movimiento" (click)="edit(m)">✎</button><button class="icon-button danger-icon" title="Eliminar movimiento" aria-label="Eliminar movimiento" (click)="modalError.set('');deleting.set(m)">🗑</button>}</div></td>
-    </tr>} @empty {<tr class="empty-row"><td colspan="8"><div class="empty"><h2>No hay movimientos</h2><p>Registra un ingreso o gasto para comenzar.</p></div></td></tr>}</tbody>
-    <tfoot><tr><td class="grid-total" colspan="8">Total de registros: <strong>{{movements().length}}</strong></td></tr></tfoot>
+    </tr>} @empty {<tr class="empty-row"><td colspan="9"><div class="empty"><h2>No hay movimientos</h2><p>Registra un ingreso o gasto para comenzar.</p></div></td></tr>}</tbody>
+    <tfoot><tr><td class="grid-total" colspan="9">Total de registros: <strong>{{movements().length}}</strong></td></tr></tfoot>
   </table></div>
 
   @if(showForm()){<div class="modal"><form class="panel review debt-create-modal" [formGroup]="form" (ngSubmit)="save()">
     <div class="debt-title"><div><span class="eyebrow">NUEVO MOVIMIENTO</span><h2>Registrar movimiento</h2></div><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="showForm.set(false)"><span aria-hidden="true">&times;</span></button></div>
     @if(modalError()){<div class="error">{{modalError()}}</div>}<div class="account-form">
       <label>Cuenta<select formControlName="financialAccountId" (change)="accountChanged()"><option value="">Selecciona</option>@for(a of accounts();track a.id){<option [value]="a.id">{{a.displayName}} · {{a.currency==='HNL'?'L':'$'}}</option>}</select></label>
+      <label>Compromiso recurrente<select formControlName="recurringCommitmentId" (change)="commitmentChanged()"><option [ngValue]="null">Ninguno</option>@for(x of commitments();track x.id){<option [value]="x.id">{{x.name}} · {{x.amount|moneyFormat:x.currency}}</option>}</select></label>
       <label>Tipo<select formControlName="type">@for(type of typeSettings();track type.code){<option [value]="type.code">{{type.label}}</option>}</select></label>
       <label>Categoría<select formControlName="categoryId"><option [ngValue]="null">Sin clasificar</option>@for(c of categories();track c.id){<option [value]="c.id">{{c.name}}</option>}</select></label><label>Monto<input type="number" formControlName="amount"></label>
       <label>Moneda de origen<select formControlName="currency"><option value="HNL">Lempiras (L)</option><option value="USD">Dólares ($)</option></select></label>
@@ -28,6 +29,7 @@
     <div class="debt-title"><div><span class="eyebrow">EDITAR MOVIMIENTO</span><h2>{{editing()!.description}}</h2></div><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="editing.set(null)"><span aria-hidden="true">&times;</span></button></div>
     @if(modalError()){<div class="error">{{modalError()}}</div>}<div class="account-form">
       <label>Cuenta<select formControlName="financialAccountId" (change)="editAccountChanged()">@for(a of accounts();track a.id){<option [value]="a.id">{{a.displayName}} · {{a.currency==='HNL'?'L':'$'}}</option>}</select></label>
+      <label>Compromiso recurrente<select formControlName="recurringCommitmentId" (change)="commitmentChanged(true)"><option [ngValue]="null">Ninguno</option>@for(x of commitments();track x.id){<option [value]="x.id">{{x.name}} · {{x.amount|moneyFormat:x.currency}}</option>}</select></label>
       <label>Tipo<select formControlName="type">@for(type of typeSettings();track type.code){<option [value]="type.code">{{type.label}}</option>}</select></label>
       <label>Categoría<select formControlName="categoryId"><option [ngValue]="null">Sin clasificar</option>@for(c of categories();track c.id){<option [value]="c.id">{{c.name}}</option>}</select></label><label>Monto<input type="number" formControlName="amount"></label>
       @if(isEditDebtPayment()){<label>Deuda<select formControlName="debtId" (change)="editDebtChanged()"><option [ngValue]="null">Selecciona</option>@for(d of debts();track d.id){<option [value]="d.id">{{d.name}} · {{d.currentPrincipal|moneyFormat:d.currency}}</option>}</select></label><label>Capital confirmado<input type="number" formControlName="principalAmount" placeholder="Ej. 3,800.00"><small>Monto que realmente reduce la deuda.</small></label><label class="check"><input type="checkbox" formControlName="isAllocationConfirmed"> Confirmo la distribución de capital</label>}

@@ -40,10 +40,12 @@ export class AccountsPage {
   save() {
     if (this.form.invalid) return;
     this.http.post<Account>('/api/v1/accounts', this.form.getRawValue()).subscribe({
-      next: x => { this.accounts.update(items => [...items, x]); this.showForm.set(false); this.form.reset(); },
-      error: () => this.error.set('No fue posible guardar la cuenta.')
+      next: x => { this.accounts.update(items => [...items, x]); this.showForm.set(false); this.form.reset(); this.notice.set('Cuenta registrada correctamente.'); this.modalError.set(''); },
+      error: () => this.modalError.set('No fue posible guardar la cuenta.')
     });
   }
+  openCreate(){this.clearFeedback();this.form.reset();this.showForm.set(true);}
+  closeCreate(){this.showForm.set(false);this.modalError.set('');}
   edit(account:Account){this.clearFeedback();this.selected.set({...account});}
   openHistory(account:Account){this.clearFeedback();this.historyAccount.set(account);this.showBalanceForm.set(false);this.http.get<Snapshot[]>(`/api/v1/accounts/${account.id}/balance-snapshots`).subscribe({next:x=>this.history.set(x),error:()=>this.modalError.set('No fue posible cargar el historial.')});}
   update(){const account=this.selected();if(!account)return;const body={institutionName:account.institutionName,displayName:account.displayName,reference:account.reference,minimumBuffer:account.minimumBuffer,isIncludedInAvailableCash:account.isIncludedInAvailableCash};this.http.put<Account>(`/api/v1/accounts/${account.id}`,body).subscribe({next:x=>{this.accounts.update(v=>v.map(a=>a.id===x.id?x:a));this.selected.set(x);this.notice.set('Cambios guardados correctamente.');this.modalError.set('');},error:()=>this.modalError.set('No fue posible guardar los cambios.')});}

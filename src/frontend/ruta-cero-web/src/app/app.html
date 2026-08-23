@@ -1,1 +1,9 @@
 <router-outlet />
+@if (loading.active()) {
+  <div class="global-loading" role="status" aria-live="polite" aria-label="Cargando datos">
+    <div class="loading-indicator">
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <span>Cargando datos…</span>
+    </div>
+  </div>
+}
