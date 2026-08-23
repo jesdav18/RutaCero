@@ -1,0 +1,4 @@
+﻿<app-header></app-header><main class="page"><div class="heading"><div><span class="eyebrow">CENTRO DE ALERTAS</span><h1>Notificaciones</h1><p>Recordatorios de pagos próximos, de hoy y vencidos.</p></div></div>@if(error()){<div class="error">{{error()}}</div>}<section class="panel movement-list">@for(x of items();track x.id){<article [class.unread]="!x.readAt" (click)="read(x)"><div><strong>{{x.title}}</strong><small>{{x.message}}</small></div><span class="status">{{x.readAt?'Leída':'Nueva'}}</span></article>}@empty{<div class="empty"><h2>Todo está al día</h2><p>No tienes notificaciones pendientes.</p></div>}</section></main>
+
+
+

@@ -1,0 +1,13 @@
+using RutaCero.Application.Accounts;using RutaCero.Application.Debts;using RutaCero.Application.Obligations;using RutaCero.Application.Recommendations;using RutaCero.Application.Transactions;
+using RutaCero.Domain.Obligations;using RutaCero.Domain.Recommendations;using RutaCero.Domain.Transactions;using RutaCero.Domain.ValueObjects;
+using RutaCero.Domain.Accounts;using RutaCero.Domain.Debts;
+namespace RutaCero.Application.Dashboard;
+public sealed record CurrencyDashboardDto(Currency Currency,decimal TotalInAccounts,decimal TotalDebt,decimal ExpensesThisMonth,decimal InterestThisMonth,decimal FeesThisMonth,decimal Upcoming7Days,decimal Upcoming30Days,int OverdueCount);
+public sealed record DashboardDto(IReadOnlyList<CurrencyDashboardDto> Currencies,IReadOnlyList<RecommendationDto> Recommendations,DateOnly GeneratedFor);
+public sealed class DashboardService(IFinancialAccountRepository accounts,IDebtRepository debts,ITransactionRepository transactions,IObligationRepository obligations,RecommendationApplicationService recommendations)
+{
+ public async Task<DashboardDto> GetAsync(Guid userId,CancellationToken token)
+ {var today=DateOnly.FromDateTime(DateTime.UtcNow);var monthStart=new DateOnly(today.Year,today.Month,1);var a=await accounts.ListAsync(userId,token);var d=await debts.ListAsync(userId,token);var tx=await transactions.ListAsync(userId,monthStart,today,token);var o=await obligations.ListAsync(userId,today.AddDays(-365),today.AddDays(30),token);foreach(var x in o)x.RefreshStatus(today);var values=new[]{Currency.HNL,Currency.USD}.Select(c=>Build(c,a,d,tx,o,today)).ToList();return new(values,await recommendations.GetAsync(userId,RecommendationStrategy.Avalanche,token),today);}
+ private static CurrencyDashboardDto Build(Currency c,IReadOnlyList<FinancialAccount> a,IReadOnlyList<Debt> d,IReadOnlyList<Transaction> tx,IReadOnlyList<PaymentObligation> o,DateOnly today)
+ {decimal SumTx(TransactionType type)=>tx.Where(x=>x.Amount.Currency==c&&x.Type==type).Sum(x=>x.Amount.Amount);decimal Due(int days)=>o.Where(x=>x.Currency==c&&x.DueDate>=today&&x.DueDate<=today.AddDays(days)&&x.Status is not(PaymentStatus.Paid or PaymentStatus.Cancelled)).Sum(x=>(x.ExpectedAmount??x.MinimumAmount??Money.Zero(c)).Amount-x.PaidAmount.Amount);return new(c,a.Where(x=>x.CurrentBalance.Currency==c).Sum(x=>x.CurrentBalance.Amount),d.Where(x=>x.CurrentPrincipal.Currency==c).Sum(x=>x.CurrentPrincipal.Amount),tx.Where(x=>x.Amount.Currency==c&&x.CountsAsExpense).Sum(x=>x.Amount.Amount),SumTx(TransactionType.Interest),SumTx(TransactionType.Fee),Due(7),Due(30),o.Count(x=>x.Currency==c&&x.Status==PaymentStatus.Overdue));}
+}

@@ -1,0 +1,38 @@
+name: Deploy production
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/frontend/ruta-cero-web/package-lock.json
+      - run: dotnet restore RutaCero.sln
+      - run: dotnet build RutaCero.sln -c Release --no-restore
+      - run: dotnet test RutaCero.sln -c Release --no-build
+      - run: dotnet publish src/backend/RutaCero.Api/RutaCero.Api.csproj -c Release -o publish/api --no-build
+      - run: npm ci
+        working-directory: src/frontend/ruta-cero-web
+      - run: npm run build
+        working-directory: src/frontend/ruta-cero-web
+      - run: mkdir -p publish/web && cp -a src/frontend/ruta-cero-web/dist/ruta-cero-web/browser/. publish/web/
+      - run: tar -czf api.tgz -C publish/api . && tar -czf web.tgz -C publish/web .
+      - uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      - run: ssh-keyscan -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+      - run: scp -P "${{ secrets.VPS_PORT }}" api.tgz web.tgz scripts/deploy-vps.sh scripts/rollback-vps.sh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/"
+      - run: ssh -p "${{ secrets.VPS_PORT }}" "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" "bash /tmp/deploy-vps.sh '${{ github.event.workflow_run.head_sha }}'"

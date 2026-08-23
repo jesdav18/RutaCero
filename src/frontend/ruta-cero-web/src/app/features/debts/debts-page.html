@@ -1,0 +1,57 @@
+<app-header></app-header>
+<main class="page debts-page">
+  <div class="heading"><div><span class="eyebrow">RUTA A CERO</span><h1>Deudas</h1><p>Solo el capital confirmado reduce el saldo.</p></div><button (click)="toggleForm()">Nueva deuda</button></div>
+  @if(notice()){<div class="success">{{notice()}}</div>}
+  @if(error()){<div class="error">{{error()}}</div>}
+  @if(showForm()){
+    <div class="modal">
+    <form class="panel review debt-create-modal" [formGroup]="form" (ngSubmit)="save()">
+      <div class="debt-title"><div><span class="eyebrow">NUEVA DEUDA</span><h2>Registrar deuda</h2></div><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="showForm.set(false)"><span aria-hidden="true">&times;</span></button></div>
+      <div class="account-form">
+      <label>Institución<input formControlName="institutionName"></label><label>Nombre<input formControlName="name"></label>
+      <label>Tipo<select formControlName="type"><option value="CreditCard">Tarjeta</option><option value="Mortgage">Hipoteca</option><option value="PersonalLoan">Préstamo personal</option><option value="ExtraFinancing">Extra financiamiento</option></select></label>
+      <label>Monto original de la deuda<input type="number" formControlName="originalPrincipal"></label>
+      <label>Moneda<select formControlName="currency"><option value="HNL">Lempiras (L)</option><option value="USD">Dólares ($)</option></select></label>
+      <label>Tasa anual %<input type="number" formControlName="annualInterestRate"></label><label>Cuota regular<input type="number" formControlName="regularPayment"></label>
+      @if(newIsCard()){<label>Día de corte<input type="number" min="1" max="31" formControlName="statementClosingDay"><small class="field-help">Exclusivo para tarjetas. Ejemplo: 15.</small></label>}
+      <label>Día mensual de pago<input type="number" min="1" max="31" formControlName="paymentDueDay"><small class="field-help">Ejemplo: 28. El calendario generará el vencimiento cada mes.</small></label><label class="check"><input type="checkbox" formControlName="autoGeneratePaymentObligations"> Generar pagos mensuales automáticamente</label>
+      <button type="submit" [disabled]="form.invalid">Guardar deuda</button>
+      </div>
+    </form>
+    </div>
+  }
+  <div class="data-grid debts-grid"><table>
+    <thead><tr><th>Institución</th><th>Deuda</th><th>Tipo</th><th class="numeric">Monto original</th><th class="numeric">Saldo actual</th><th class="numeric">Tasa anual</th><th class="numeric">Cuota</th><th class="numeric">Avance</th><th>Acciones</th></tr></thead>
+    <tbody>
+      @for(debt of debts();track debt.id){<tr>
+        <td data-label="Institución">{{debt.institutionName}}</td><td data-label="Deuda"><strong>{{debt.name}}</strong></td><td data-label="Tipo">{{typeLabel(debt.type)}}</td>
+        <td data-label="Monto original" class="numeric">{{debt.originalPrincipal|moneyFormat:debt.currency}}</td><td data-label="Saldo actual" class="numeric"><strong>{{debt.currentPrincipal|moneyFormat:debt.currency}}</strong></td>
+        <td data-label="Tasa anual" class="numeric">{{debt.annualInterestRate===null?'—':debt.annualInterestRate+'%'}}</td><td data-label="Cuota" class="numeric">{{debt.regularPayment|moneyFormat:debt.currency}}</td><td data-label="Avance" class="numeric">{{debt.progressPercentage}}%</td>
+        <td data-label="Acciones"><div class="row-actions"><button class="icon-button" title="Historial de saldos" aria-label="Historial de saldos" (click)="showHistory(debt)">◉</button><button class="icon-button" title="Registrar pago" aria-label="Registrar pago" (click)="openPayment(debt)">$</button><button class="icon-button" title="Editar deuda" aria-label="Editar deuda" (click)="edit(debt)">✎</button></div></td>
+      </tr>} @empty {<tr class="empty-row"><td colspan="9"><div class="empty"><h2>No hay deudas registradas</h2><p>Agrega una deuda para medir tu avance.</p></div></td></tr>}
+    </tbody>
+    <tfoot><tr><td class="grid-total" colspan="9">Total de registros: <strong>{{debts().length}}</strong></td></tr></tfoot>
+  </table></div>
+  @if(editing()){<div class="modal"><form class="panel review debt-create-modal" [formGroup]="editForm" (ngSubmit)="update()">
+    <div class="debt-title"><div><span class="eyebrow">EDITAR DEUDA</span><h2>{{editing()!.name}}</h2></div><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="editing.set(null)"><span aria-hidden="true">&times;</span></button></div>
+    @if(modalError()){<div class="error">{{modalError()}}</div>}
+    <div class="account-form"><label>Institución<input formControlName="institutionName"></label><label>Nombre<input formControlName="name"></label>
+      <label>Tipo<select formControlName="type"><option value="CreditCard">Tarjeta</option><option value="Mortgage">Hipoteca</option><option value="PersonalLoan">Préstamo personal</option><option value="ExtraFinancing">Extra financiamiento</option></select></label>
+      <label>Tasa anual %<input type="number" formControlName="annualInterestRate"></label><label>Cuota regular<input type="number" formControlName="regularPayment"></label>
+      <label class="check"><input type="checkbox" formControlName="allowsCapitalPrepayment"> Permite abonos a capital</label><label class="check"><input type="checkbox" formControlName="hasPrepaymentPenalty"> Tiene penalización por prepago</label>
+      @if(editIsCard()){<label>Día de corte<input type="number" min="1" max="31" formControlName="statementClosingDay"></label>}
+      <label>Día mensual de pago<input type="number" min="1" max="31" formControlName="paymentDueDay"></label><label class="check"><input type="checkbox" formControlName="autoGeneratePaymentObligations"> Generar pagos mensuales automáticamente</label>
+      <button type="submit" [disabled]="editForm.invalid">Guardar cambios</button>
+    </div>
+  </form></div>}
+  @if(paymentFor()){<div class="modal"><form class="panel payment-form" [formGroup]="payment" (ngSubmit)="pay()">
+    <div class="debt-title"><h2>Pago a {{paymentFor()!.name}}</h2><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="paymentFor.set(null)"><span aria-hidden="true">&times;</span></button></div>
+    <label>Fecha<input type="date" formControlName="paymentDate"><small class="field-help">Fecha en que realizaste el pago.</small></label>
+    <label>Monto total<input type="number" formControlName="totalAmount" placeholder="Ej. 5000.00"><small class="field-help">Si pagaste L 5,000.00 al banco, escribe 5000 aquí.</small></label>
+    <label>Capital confirmado<input type="number" formControlName="principalAmount" placeholder="Ej. 3800.00"><small class="field-help">Escribe solo lo que redujo la deuda. Ejemplo: de L 5,000.00 pagados, el banco aplicó L 3,800.00 a capital.</small></label>
+    <label>Tipo<select formControlName="type"><option value="RegularInstallment">Cuota regular</option><option value="MinimumPayment">Pago mínimo</option><option value="ExtraPrincipalPayment">Abono a capital</option></select><small class="field-help">Selecciona si fue la cuota habitual, el mínimo requerido o un abono adicional.</small></label>
+    <label class="check"><input type="checkbox" formControlName="isAllocationConfirmed"> Confirmo la distribución de capital</label><small class="field-help confirmation-help">Márcalo únicamente si verificaste en el recibo o estado de cuenta cuánto se aplicó a capital.</small>
+    <div><button type="button" class="quiet" (click)="paymentFor.set(null)">Cancelar</button><button type="submit">Registrar</button></div>
+  </form></div>}
+  @if(historyFor()){<div class="modal"><section class="panel review history-modal"><div class="debt-title"><div><span class="eyebrow">SALDOS CONFIRMADOS</span><h2>{{historyFor()!.name}}</h2></div><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="historyFor.set(null)"><span aria-hidden="true">&times;</span></button></div><div class="data-grid history-grid"><table><thead><tr><th>Fecha del estado</th><th>Origen</th><th>Moneda</th><th class="numeric">Saldo confirmado</th></tr></thead><tbody>@for(x of balanceHistory();track x.id){<tr><td data-label="Fecha del estado">{{x.statementDate}}</td><td data-label="Origen">{{x.statementImportId?'Estado importado':'Manual'}}</td><td data-label="Moneda">{{x.currency==='USD'?'$':'L'}}</td><td data-label="Saldo confirmado" class="numeric"><strong>{{x.balance|moneyFormat:x.currency}}</strong></td></tr>}@empty{<tr class="empty-row"><td colspan="4"><div class="empty"><h3>No hay saldos confirmados</h3><p>Asigna un estado desde la bandeja Estados.</p></div></td></tr>}</tbody></table></div></section></div>}
+</main>

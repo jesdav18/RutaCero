@@ -1,0 +1,11 @@
+using RutaCero.Domain.ValueObjects;
+namespace RutaCero.Domain.Transactions;
+public enum DescriptionMatchType { Contains,StartsWith,Exact }
+public sealed class CategorizationRule
+{
+ public Guid Id{get;private set;}public Guid UserId{get;private set;}public string Name{get;private set;}public Guid CategoryId{get;private set;}public DescriptionMatchType? MatchType{get;private set;}public string? DescriptionPattern{get;private set;}public string? InstitutionName{get;private set;}public Guid? FinancialAccountId{get;private set;}public decimal? MinimumAmount{get;private set;}public decimal? MaximumAmount{get;private set;}public Currency? Currency{get;private set;}public TransactionType? TransactionType{get;private set;}public int Priority{get;private set;}public bool IsActive{get;private set;}=true;
+ public CategorizationRule(Guid userId,string name,Guid categoryId,DescriptionMatchType? matchType,string? pattern,string? institution,Guid? accountId,decimal? min,decimal? max,Currency? currency,TransactionType? type,int priority){Id=Guid.NewGuid();UserId=userId;Name=name.Trim();CategoryId=categoryId;MatchType=matchType;DescriptionPattern=pattern?.Trim();InstitutionName=institution?.Trim();FinancialAccountId=accountId;MinimumAmount=min;MaximumAmount=max;Currency=currency;TransactionType=type;Priority=priority;}
+ public bool Matches(string description,string? institution,Guid accountId,Money amount,TransactionType type)
+ {if(!IsActive||InstitutionName is not null&&!string.Equals(InstitutionName,institution,StringComparison.OrdinalIgnoreCase)||FinancialAccountId is not null&&FinancialAccountId!=accountId||MinimumAmount is not null&&amount.Amount<MinimumAmount||MaximumAmount is not null&&amount.Amount>MaximumAmount||Currency is not null&&Currency!=amount.Currency||TransactionType is not null&&TransactionType!=type)return false;if(DescriptionPattern is null)return true;return MatchType switch{DescriptionMatchType.Contains=>description.Contains(DescriptionPattern,StringComparison.OrdinalIgnoreCase),DescriptionMatchType.StartsWith=>description.StartsWith(DescriptionPattern,StringComparison.OrdinalIgnoreCase),DescriptionMatchType.Exact=>string.Equals(description,DescriptionPattern,StringComparison.OrdinalIgnoreCase),_=>true};}
+ private CategorizationRule(){Name=string.Empty;}
+}

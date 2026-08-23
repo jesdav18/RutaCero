@@ -1,0 +1,30 @@
+<app-header></app-header>
+<main class="page calendar-page">
+  <div class="heading">
+    <div><span class="eyebrow">PRÓXIMOS PAGOS</span><h1>Calendario</h1><p>Conoce qué vence y cuánto efectivo necesitas proteger.</p></div>
+    <button (click)="openForm()">Nueva obligación</button>
+  </div>
+  @if(notice()){<div class="success">{{notice()}}</div>}
+  @if(error()&&!showForm()){<div class="error">{{error()}}</div>}
+  <div class="data-grid calendar-grid"><table>
+    <thead><tr><th>Fecha máxima</th><th>Obligación</th><th>Tipo</th><th>Estado</th><th>Moneda</th><th class="numeric">Monto</th><th class="numeric">Pagado</th><th>Acciones</th></tr></thead>
+    <tbody>
+      @for(item of items();track item.id){
+        <tr [class.overdue-row]="item.status==='Overdue'">
+          <td data-label="Fecha máxima">{{item.dueDate}}</td><td data-label="Obligación"><strong>{{item.description}}</strong></td><td data-label="Tipo">{{typeLabel(item.type)}}</td><td data-label="Estado"><span class="status">{{label(item.status)}}</span></td><td data-label="Moneda">{{item.currency==='USD'?'$':'L'}}</td><td data-label="Monto" class="numeric"><strong>{{(item.expectedAmount??item.minimumAmount??0)|moneyFormat:item.currency}}</strong></td><td data-label="Pagado" class="numeric">{{item.paidAmount|moneyFormat:item.currency}}</td>
+          <td data-label="Acciones"><div class="row-actions">@if(item.status!=='Paid'&&(item.expectedAmount||item.minimumAmount)){<button class="icon-button" title="Marcar pagado" aria-label="Marcar pagado" (click)="pay(item)">&#10003;</button>}</div></td>
+        </tr>
+      }@empty{<tr class="empty-row"><td colspan="8"><div class="empty"><h2>No hay pagos programados</h2><p>Configura el día de pago de tus tarjetas y préstamos desde Deudas.</p><a routerLink="/deudas">Configurar fechas de pago</a></div></td></tr>}
+    </tbody>
+    <tfoot><tr><td colspan="8" class="grid-total">Total de registros: <strong>{{items().length}}</strong></td></tr></tfoot>
+  </table></div>
+</main>
+@if(showForm()){
+  <div class="modal"><form class="panel review obligation-modal" [formGroup]="form" (ngSubmit)="save()">
+    <div class="debt-title"><div><span class="eyebrow">NUEVA OBLIGACIÓN</span><h2>Programar pago</h2></div><button class="modal-close" type="button" title="Cerrar" aria-label="Cerrar" (click)="showForm.set(false)"><span aria-hidden="true">&times;</span></button></div>
+    @if(error()){<div class="error">{{error()}}</div>}
+    <div class="account-form">
+      <label>Descripción<input formControlName="description" placeholder="Ej. Pago de tarjeta BAC"></label><label>Tipo<select formControlName="type"><option value="CreditCardMinimumPayment">Mínimo de tarjeta</option><option value="CreditCardStatementPayment">Pago de contado</option><option value="LoanInstallment">Cuota de préstamo</option><option value="MortgageInstallment">Hipoteca</option><option value="RecurringCommitment">Compromiso</option><option value="Other">Otro</option></select></label><label>Monto esperado<input type="number" formControlName="expectedAmount" placeholder="Ej. 5,000.00"></label><label>Monto mínimo<input type="number" formControlName="minimumAmount" placeholder="Ej. 1,250.00"></label><label>Moneda<select formControlName="currency"><option value="HNL">Lempiras (L)</option><option value="USD">Dólares ($)</option></select></label><label>Fecha máxima<input type="date" formControlName="dueDate"></label><button type="submit" [disabled]="form.invalid">Guardar obligación</button>
+    </div>
+  </form></div>
+}

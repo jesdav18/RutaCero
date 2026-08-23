@@ -1,0 +1,6 @@
+﻿<app-header></app-header><main class="page"><div class="heading"><div><span class="eyebrow">PLAN MENSUAL</span><h1>Presupuesto</h1><p>Define límites por categoría y observa la proyección del mes.</p></div></div><form class="panel budget-form" [formGroup]="form" (ngSubmit)="save()"><label>Categoría<select formControlName="categoryId">@for(c of categories();track c.id){<option [value]="c.id">{{c.name}}</option>}</select></label><label>Monto<input type="number" formControlName="amount"></label><label>Moneda<select formControlName="currency"><option value="HNL">Lempiras (L)</option><option value="USD">Dólares ($)</option></select></label><button>Guardar presupuesto</button></form><section class="budget-grid">@for(x of items();track x.categoryId){<article class="panel"><div class="debt-title"><h2>{{name(x.categoryId)}}</h2><strong>{{x.remaining|moneyFormat:x.currency}}</strong></div><div class="progress"><i [style.width.%]="x.percentageUsed>100?100:x.percentageUsed"></i></div><div class="debt-meta"><span>Consumido {{x.consumed|moneyFormat:x.currency}}</span><span>{{x.percentageUsed}}%</span><span>Proyección {{x.projected|moneyFormat:x.currency}}</span></div></article>}@empty{<article class="panel empty"><h2>No hay presupuestos</h2><p>Define el primero para comenzar a medir.</p></article>}</section></main>
+
+
+
+
+

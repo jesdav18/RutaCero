@@ -1,0 +1,6 @@
+using Microsoft.EntityFrameworkCore;using RutaCero.Domain.Transactions;
+namespace RutaCero.Infrastructure.Persistence;
+internal static class CategorizationRuleConfiguration
+{
+ public static void Configure(ModelBuilder b){var x=b.Entity<CategorizationRule>();x.ToTable("categorization_rules");x.HasKey(v=>v.Id);x.Property(v=>v.Id).HasColumnName("id");x.Property(v=>v.UserId).HasColumnName("user_id");x.Property(v=>v.Name).HasColumnName("name");x.Property(v=>v.CategoryId).HasColumnName("category_id");x.Property(v=>v.MatchType).HasColumnName("match_type").HasConversion<string>();x.Property(v=>v.DescriptionPattern).HasColumnName("description_pattern");x.Property(v=>v.InstitutionName).HasColumnName("institution_name");x.Property(v=>v.FinancialAccountId).HasColumnName("financial_account_id");x.Property(v=>v.MinimumAmount).HasColumnName("minimum_amount").HasPrecision(18,2);x.Property(v=>v.MaximumAmount).HasColumnName("maximum_amount").HasPrecision(18,2);x.Property(v=>v.Currency).HasColumnName("currency").HasConversion<string>();x.Property(v=>v.TransactionType).HasColumnName("transaction_type").HasConversion<string>();x.Property(v=>v.Priority).HasColumnName("priority");x.Property(v=>v.IsActive).HasColumnName("is_active");x.HasIndex(v=>new{v.UserId,v.Priority});}
+}
