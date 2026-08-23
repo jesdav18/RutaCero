@@ -1,4 +1,4 @@
-﻿[Unit]
+[Unit]
 Description=Ruta Cero API
 After=network-online.target postgresql.service
 Wants=network-online.target
