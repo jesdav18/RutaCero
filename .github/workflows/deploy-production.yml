@@ -21,13 +21,15 @@ jobs:
           cache: npm
           cache-dependency-path: src/frontend/ruta-cero-web/package-lock.json
       - run: dotnet restore RutaCero.sln
-      - run: dotnet build RutaCero.sln -c Release --no-restore
+      - run: dotnet build RutaCero.sln -c Release --no-restore -p:BuildCommit=${{ github.event.workflow_run.head_sha }}
       - run: dotnet test RutaCero.sln -c Release --no-build
       - run: dotnet publish src/backend/RutaCero.Api/RutaCero.Api.csproj -c Release -o publish/api --no-build
       - run: npm ci
         working-directory: src/frontend/ruta-cero-web
       - run: npm run build
         working-directory: src/frontend/ruta-cero-web
+        env:
+          BUILD_COMMIT: ${{ github.event.workflow_run.head_sha }}
       - run: mkdir -p publish/web && cp -a src/frontend/ruta-cero-web/dist/ruta-cero-web/browser/. publish/web/
       - run: tar -czf api.tgz -C publish/api . && tar -czf web.tgz -C publish/web .
       - uses: webfactory/ssh-agent@v0.9.0

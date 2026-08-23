@@ -11,10 +11,9 @@ export class AuthPage {
   readonly error = signal('');
   readonly pending = signal(false);
   readonly showPassword = signal(false);
-  readonly appVersion = '1.0.0';
   readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
-    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(12)] })
+    password: new FormControl('', { nonNullable: true, validators: this.isRegister ? [Validators.required,Validators.minLength(12)] : [Validators.required] })
   });
   togglePasswordVisibility() { this.showPassword.update(value => !value); }
   submit() {

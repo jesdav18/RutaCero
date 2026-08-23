@@ -1,11 +1,14 @@
 ﻿<main class="auth-shell">
   <section class="brand-panel">
-    <span class="auth-brand">Ruta <strong>Cero</strong></span>
-    <h1>Tu dinero, con una ruta clara.</h1>
+    <div class="brand-identity">
+      <img src="ruta-cero-logo.png" alt="Ruta Cero" />
+    </div>
+    <h1>Tu dinero, con<br />una ruta clara.</h1>
     <p>Organiza tus cuentas, protege tu efectivo y elimina tus deudas con decisiones informadas.</p>
   </section>
-  <section class="auth-card">
-    <h2>{{ isRegister ? 'Crea tu cuenta' : 'Bienvenido de vuelta' }}</h2>
+  <section class="auth-panel">
+    <div class="auth-card">
+    <h2>{{ isRegister ? 'Crea tu cuenta' : 'Bienvenido' }}</h2>
     <p>{{ isRegister ? 'Empieza hoy tu ruta hacia cero deudas.' : 'Continúa avanzando hacia tu meta.' }}</p>
     <form [formGroup]="form" (ngSubmit)="submit()">
       <label>Correo electrónico<input type="email" formControlName="email" autocomplete="email" /></label>
@@ -27,8 +30,17 @@
       @if (error()) { <div class="error">{{ error() }}</div> }
       <button type="submit" [disabled]="form.invalid || pending()">{{ pending() ? 'Procesando…' : isRegister ? 'Crear cuenta' : 'Ingresar' }}</button>
     </form>
-    <a [routerLink]="isRegister ? '/login' : '/registro'">{{ isRegister ? 'Ya tengo una cuenta' : 'Crear una cuenta nueva' }}</a>
-    <small class="app-version">Ruta Cero v{{ appVersion }}</small>
+    <div class="auth-meta">
+      <p class="auth-switch">
+        {{ isRegister ? '¿Ya tienes cuenta?' : '¿No tienes cuenta?' }}
+        <a [routerLink]="isRegister ? '/login' : '/registro'">{{ isRegister ? 'Ingresar' : 'Crear cuenta' }}</a>
+      </p>
+      <p class="privacy-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+        Tus datos financieros permanecen privados.
+      </p>
+    </div>
+    </div>
   </section>
 </main>
 

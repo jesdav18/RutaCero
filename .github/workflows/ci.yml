@@ -18,9 +18,11 @@ jobs:
           cache: npm
           cache-dependency-path: src/frontend/ruta-cero-web/package-lock.json
       - run: dotnet restore RutaCero.sln
-      - run: dotnet build RutaCero.sln --configuration Release --no-restore
+      - run: dotnet build RutaCero.sln --configuration Release --no-restore -p:BuildCommit=${{ github.sha }}
       - run: dotnet test RutaCero.sln --configuration Release --no-build
       - run: npm ci
         working-directory: src/frontend/ruta-cero-web
       - run: npm run build
         working-directory: src/frontend/ruta-cero-web
+        env:
+          BUILD_COMMIT: ${{ github.sha }}
