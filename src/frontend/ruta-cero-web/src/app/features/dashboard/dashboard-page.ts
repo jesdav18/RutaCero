@@ -12,5 +12,8 @@ export class DashboardPage {
   private readonly http=inject(HttpClient);
   readonly data=signal<Dashboard|null>(null);readonly error=signal('');
   readonly selectedCurrency=signal('HNL');
-  constructor(){this.http.get<Dashboard>('/api/v1/dashboard').subscribe({next:x=>{this.data.set(x);if(!x.currencies.some(item=>item.currency===this.selectedCurrency()))this.selectedCurrency.set(x.currencies[0]?.currency??'HNL');},error:()=>this.error.set('No fue posible cargar tu panorama.')});}
+  constructor(){this.http.get<Dashboard>('/api/v1/dashboard').subscribe({next:x=>{const dashboard={...x,recommendations:x.recommendations.map(item=>({...item,confidence:this.confidenceLabel(item.confidence)}))};this.data.set(dashboard);if(!x.currencies.some(item=>item.currency===this.selectedCurrency()))this.selectedCurrency.set(x.currencies[0]?.currency??'HNL');},error:()=>this.error.set('No fue posible cargar tu panorama.')});}
+  recommendationFor(dashboard:Dashboard,currency:string){return dashboard.recommendations.find(x=>x.currency===currency)??null;}
+  protectedReserve(total:number,committed:number,available:number){return Math.max(total-committed-available,0);}
+  private confidenceLabel(value:string){return({High:'Alta',Medium:'Media',Low:'Baja'} as Record<string,string>)[value]??value;}
 }

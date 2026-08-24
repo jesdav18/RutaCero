@@ -11,7 +11,7 @@ public sealed record CreateTransactionCommand(Guid FinancialAccountId,Guid? Rela
     decimal? RelatedAmount=null,Currency? RelatedCurrency=null,Guid? DebtId=null,decimal? PrincipalAmount=null,bool IsAllocationConfirmed=false,Guid? RecurringCommitmentId=null);
 public sealed record UpdateTransactionCommand(Guid FinancialAccountId,Guid? RelatedFinancialAccountId,
     Guid? CategoryId,TransactionType Type,decimal Amount,Currency Currency,DateOnly TransactionDate,string Description,
-    Guid? DebtId=null,decimal? PrincipalAmount=null,bool IsAllocationConfirmed=false,Guid? RecurringCommitmentId=null);
+    decimal? RelatedAmount=null,Currency? RelatedCurrency=null,Guid? DebtId=null,decimal? PrincipalAmount=null,bool IsAllocationConfirmed=false,Guid? RecurringCommitmentId=null);
 public sealed record CategoryDto(Guid Id,string Name,bool IsIncome,bool IsSystem);
 public interface ITransactionRepository
 {

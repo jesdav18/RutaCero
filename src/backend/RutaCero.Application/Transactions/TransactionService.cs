@@ -28,16 +28,21 @@ public sealed class TransactionService(ITransactionRepository transactions,IFina
         }
         if(command.Type==TransactionType.Transfer)
         {
-            if(relatedAccount is null||command.RelatedFinancialAccountId is not Guid destinationId||destinationId==command.FinancialAccountId)
-                return Result<TransactionDto>.Failure("Selecciona una cuenta destino diferente.");
-            if(command.RelatedAmount is null or <=0||command.RelatedCurrency is null)
-                return Result<TransactionDto>.Failure("El monto y la moneda de destino son obligatorios.");
-            var groupId=Guid.NewGuid();var createdAt=DateTimeOffset.UtcNow;
+            if(command.RelatedFinancialAccountId==command.FinancialAccountId)
+                return Result<TransactionDto>.Failure("La cuenta destino debe ser diferente de la cuenta origen.");
+            if(relatedAccount is not null&&(command.RelatedAmount is null or <=0||command.RelatedCurrency is null))
+                return Result<TransactionDto>.Failure("Indica el monto y la moneda recibidos en la cuenta destino.");
+            var groupId=relatedAccount is null?(Guid?)null:Guid.NewGuid();var createdAt=DateTimeOffset.UtcNow;
             var outgoing=new Transaction(userId,command.FinancialAccountId,command.RelatedFinancialAccountId,command.CategoryId,
                 command.Type,new Money(command.Amount,command.Currency),command.TransactionDate,command.Description,createdAt,groupId,TransferDirection.Outgoing,recurringCommitmentId:command.RecurringCommitmentId);
-            var incoming=new Transaction(userId,destinationId,command.FinancialAccountId,command.CategoryId,
-                command.Type,new Money(command.RelatedAmount.Value,command.RelatedCurrency.Value),command.TransactionDate,command.Description,createdAt,groupId,TransferDirection.Incoming);
-            await transactions.AddAsync(outgoing,token);await transactions.AddAsync(incoming,token);await unitOfWork.SaveChangesAsync(token);
+            await transactions.AddAsync(outgoing,token);
+            if(relatedAccount is not null)
+            {
+                var incoming=new Transaction(userId,relatedAccount.Id,command.FinancialAccountId,command.CategoryId,
+                    command.Type,new Money(command.RelatedAmount!.Value,command.RelatedCurrency!.Value),command.TransactionDate,command.Description,createdAt,groupId,TransferDirection.Incoming);
+                await transactions.AddAsync(incoming,token);
+            }
+            await unitOfWork.SaveChangesAsync(token);
             return Result<TransactionDto>.Success(Map(outgoing));
         }
         Debt? debt=null;
@@ -63,10 +68,16 @@ public sealed class TransactionService(ITransactionRepository transactions,IFina
     {
         var item=await transactions.FindAsync(id,userId,token);
         if(item is null)return Result<TransactionDto>.Failure("El movimiento no existe.");
+        IReadOnlyList<Transaction> transferItems=item.TransferGroupId is Guid existingGroupId
+            ?await transactions.ListTransferGroupAsync(existingGroupId,userId,token)
+            :new List<Transaction>{item};
+        if(item.TransferDirection==TransferDirection.Incoming)
+            item=transferItems.First(x=>x.TransferDirection==TransferDirection.Outgoing);
         if(item.DebtId is not null)return Result<TransactionDto>.Failure("Los pagos ya vinculados deben corregirse desde Deudas.");
         if(await accounts.FindAsync(command.FinancialAccountId,userId,token) is null)
             return Result<TransactionDto>.Failure("La cuenta no existe.");
-        if(command.RelatedFinancialAccountId is Guid related&&await accounts.FindAsync(related,userId,token) is null)
+        FinancialAccount? relatedAccount=null;
+        if(command.RelatedFinancialAccountId is Guid related&&(relatedAccount=await accounts.FindAsync(related,userId,token)) is null)
             return Result<TransactionDto>.Failure("La cuenta relacionada no existe.");
         if(command.RecurringCommitmentId is Guid commitmentId)
         {
@@ -75,6 +86,39 @@ public sealed class TransactionService(ITransactionRepository transactions,IFina
             if(commitment.Amount.Currency!=command.Currency)return Result<TransactionDto>.Failure("El movimiento y el compromiso deben usar la misma moneda.");
         }
         Debt? linkedDebt=null;
+        if(command.Type==TransactionType.Transfer)
+        {
+            if(command.RelatedFinancialAccountId==command.FinancialAccountId)
+                return Result<TransactionDto>.Failure("La cuenta destino debe ser diferente de la cuenta origen.");
+            if(relatedAccount is not null&&(command.RelatedAmount is null or <=0||command.RelatedCurrency is null))
+                return Result<TransactionDto>.Failure("Indica el monto y la moneda recibidos en la cuenta destino.");
+            var incoming=transferItems.FirstOrDefault(x=>x.TransferDirection==TransferDirection.Incoming);
+            var groupId=relatedAccount is null?(Guid?)null:item.TransferGroupId??Guid.NewGuid();
+            item.Update(command.FinancialAccountId,command.RelatedFinancialAccountId,command.CategoryId,command.Type,
+                new Money(command.Amount,command.Currency),command.TransactionDate,command.Description,command.RecurringCommitmentId);
+            item.ConfigureTransfer(groupId,TransferDirection.Outgoing);
+            if(relatedAccount is null&&incoming is not null)transactions.RemoveRange([incoming]);
+            if(relatedAccount is not null)
+            {
+                if(incoming is null)
+                {
+                    incoming=new Transaction(userId,relatedAccount.Id,command.FinancialAccountId,command.CategoryId,TransactionType.Transfer,
+                        new Money(command.RelatedAmount!.Value,command.RelatedCurrency!.Value),command.TransactionDate,command.Description,DateTimeOffset.UtcNow,groupId,TransferDirection.Incoming);
+                    await transactions.AddAsync(incoming,token);
+                }
+                else
+                {
+                    incoming.Update(relatedAccount.Id,command.FinancialAccountId,command.CategoryId,TransactionType.Transfer,
+                        new Money(command.RelatedAmount!.Value,command.RelatedCurrency!.Value),command.TransactionDate,command.Description,null);
+                    incoming.ConfigureTransfer(groupId,TransferDirection.Incoming);
+                }
+            }
+            await unitOfWork.SaveChangesAsync(token);
+            return Result<TransactionDto>.Success(Map(item));
+        }
+        var previousIncoming=transferItems.FirstOrDefault(x=>x.TransferDirection==TransferDirection.Incoming);
+        if(previousIncoming is not null)transactions.RemoveRange([previousIncoming]);
+        item.ConfigureTransfer(null,null);
         if(command.Type==TransactionType.DebtPayment)
         {
             if(command.DebtId is not Guid debtId||(linkedDebt=await debts.FindAsync(debtId,userId,token)) is null)

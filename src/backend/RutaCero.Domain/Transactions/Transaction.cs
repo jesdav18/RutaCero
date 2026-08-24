@@ -44,6 +44,7 @@ public sealed class Transaction
         FinancialAccountId=accountId; RelatedFinancialAccountId=relatedAccountId; CategoryId=categoryId;
         Type=type; _amount=amount.Amount; _currency=amount.Currency; TransactionDate=date; Description=description.Trim();RecurringCommitmentId=recurringCommitmentId;
     }
+    public void ConfigureTransfer(Guid? groupId,TransferDirection? direction){TransferGroupId=groupId;TransferDirection=direction;}
     public void LinkDebt(Guid debtId)
     {
         if(Type!=TransactionType.DebtPayment||DebtId is not null)throw new DomainException("Transaction cannot be linked to this debt.");

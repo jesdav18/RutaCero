@@ -3,16 +3,25 @@ using RutaCero.Domain.Obligations;
 using RutaCero.Domain.ValueObjects;
 using RutaCero.Application.Debts;
 using RutaCero.Domain.Debts;
+using RutaCero.Application.Transactions;
+using RutaCero.Domain.Transactions;
 
 namespace RutaCero.Application.Obligations;
 
-public sealed class ObligationService(IObligationRepository repository,IDebtRepository debts,IUnitOfWork unitOfWork)
+public sealed class ObligationService(IObligationRepository repository,IDebtRepository debts,IUnitOfWork unitOfWork,ITransactionRepository transactions)
 {
     public async Task<IReadOnlyList<ObligationDto>> ListAsync(Guid userId,DateOnly? from,DateOnly? to,CancellationToken token)
     {
         var today=DateOnly.FromDateTime(DateTime.UtcNow);var items=await repository.ListAsync(userId,from,to,token);
         foreach(var item in items)item.RefreshStatus(today);
-        return items.Select(Map).ToList();
+        if(items.Count==0)return [];
+        var first=items.Min(x=>x.DueDate);var last=items.Max(x=>x.DueDate);
+        var transactionFrom=new DateOnly(first.Year,first.Month,1);
+        var transactionTo=new DateOnly(last.Year,last.Month,DateTime.DaysInMonth(last.Year,last.Month));
+        var payments=(await transactions.ListAsync(userId,transactionFrom,transactionTo,token))
+            .Where(x=>x.Type==TransactionType.DebtPayment&&x.DebtId is not null)
+            .ToList();
+        return items.Select(x=>Map(x,payments,today)).ToList();
     }
     public async Task GenerateScheduledAsync(Guid userId,DateOnly from,DateOnly to,CancellationToken token)
     {
@@ -47,4 +56,15 @@ public sealed class ObligationService(IObligationRepository repository,IDebtRepo
     }
     private static ObligationDto Map(PaymentObligation x)=>new(x.Id,x.DebtId,x.Type,x.Description,x.Currency,
         x.ExpectedAmount?.Amount,x.MinimumAmount?.Amount,x.PaidAmount.Amount,x.DueDate,x.IsAmountEstimated,x.Status);
+    private static ObligationDto Map(PaymentObligation x,IReadOnlyList<Transaction> payments,DateOnly today)
+    {
+        var paid=0m;
+        if(x.DebtId is Guid debtId)
+        {
+            paid=payments.Where(v=>v.DebtId==debtId&&v.TransactionDate.Year==x.DueDate.Year&&v.TransactionDate.Month==x.DueDate.Month).Sum(v=>v.Amount.Amount);
+        }
+        var status=paid>0?PaymentStatus.Paid:x.Status==PaymentStatus.Cancelled?PaymentStatus.Cancelled:
+            x.DueDate<today?PaymentStatus.Overdue:x.DueDate==today?PaymentStatus.DueToday:x.DueDate<=today.AddDays(7)?PaymentStatus.DueSoon:PaymentStatus.Upcoming;
+        return new(x.Id,x.DebtId,x.Type,x.Description,x.Currency,x.ExpectedAmount?.Amount,x.MinimumAmount?.Amount,paid,x.DueDate,x.IsAmountEstimated,status);
+    }
 }

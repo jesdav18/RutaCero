@@ -47,11 +47,12 @@ export class AccountsPage {
   openCreate(){this.clearFeedback();this.form.reset();this.showForm.set(true);}
   closeCreate(){this.showForm.set(false);this.modalError.set('');}
   edit(account:Account){this.clearFeedback();this.selected.set({...account});}
-  openHistory(account:Account){this.clearFeedback();this.historyAccount.set(account);this.showBalanceForm.set(false);this.http.get<Snapshot[]>(`/api/v1/accounts/${account.id}/balance-snapshots`).subscribe({next:x=>this.history.set(x),error:()=>this.modalError.set('No fue posible cargar el historial.')});}
+  openHistory(account:Account){this.clearFeedback();this.historyAccount.set(account);this.showBalanceForm.set(false);this.http.get<Snapshot[]>(`/api/v1/accounts/${account.id}/balance-snapshots`).subscribe({next:x=>this.history.set(x.map(item=>({...item,confidence:this.confidenceLabel(item.confidence)}))),error:()=>this.modalError.set('No fue posible cargar el historial.')});}
   update(){const account=this.selected();if(!account)return;const body={institutionName:account.institutionName,displayName:account.displayName,reference:account.reference,minimumBuffer:account.minimumBuffer,isIncludedInAvailableCash:account.isIncludedInAvailableCash};this.http.put<Account>(`/api/v1/accounts/${account.id}`,body).subscribe({next:x=>{this.accounts.update(v=>v.map(a=>a.id===x.id?x:a));this.selected.set(x);this.notice.set('Cambios guardados correctamente.');this.modalError.set('');},error:()=>this.modalError.set('No fue posible guardar los cambios.')});}
   addBalance(){const account=this.historyAccount();if(!account)return;this.http.post<Snapshot>(`/api/v1/accounts/${account.id}/balance-snapshots`,this.balanceForm.getRawValue()).subscribe({next:x=>{this.history.update(v=>[x,...v]);this.accounts.update(v=>v.map(a=>a.id===account.id?{...a,balance:x.balance,balanceDate:x.snapshotDate}:a));this.historyAccount.update(a=>a?{...a,balance:x.balance,balanceDate:x.snapshotDate}:a);this.notice.set('Saldo registrado correctamente.');this.modalError.set('');this.showBalanceForm.set(false);},error:()=>this.modalError.set('No fue posible registrar el saldo.')});}
   clearFeedback(){this.notice.set('');this.modalError.set('');}
   typeLabel(type:string){return({CheckingAccount:'Cuenta corriente',SavingsAccount:'Cuenta de ahorro',Cash:'Efectivo',CreditCard:'Tarjeta de crédito'} as Record<string,string>)[type]??type;}
+  confidenceLabel(value:string){return({High:'Alta',Medium:'Media',Low:'Baja'} as Record<string,string>)[value]??value;}
   maskedReference(reference:string){return `•••• ${reference.slice(-4)}`;}
 }
 

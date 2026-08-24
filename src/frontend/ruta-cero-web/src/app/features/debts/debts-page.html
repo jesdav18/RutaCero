@@ -20,6 +20,7 @@
     </form>
     </div>
   }
+  <section class="mobile-debt-list" aria-label="Deudas">@for(debt of debts();track debt.id){<article><button type="button" class="mobile-debt-main" (click)="showHistory(debt)"><span class="mobile-debt-heading"><span><strong>{{debt.name}}</strong><small>{{debt.institutionName}}</small></span><b>{{debt.currentPrincipal|moneyFormat:debt.currency}}</b></span><span class="mobile-debt-meta"><span>Cuota {{debt.regularPayment|moneyFormat:debt.currency}}</span><span>{{nextPaymentLabel(debt)}}</span></span><span class="progress"><i [style.width.%]="debt.progressPercentage"></i></span><span class="mobile-debt-progress">{{debt.progressPercentage}}% eliminado</span></button><button type="button" class="mobile-overflow" aria-label="Acciones para {{debt.name}}" (click)="edit(debt)">⋮</button></article>}@empty{<div class="empty"><h2>No hay deudas registradas</h2><p>Agrega una deuda para medir tu avance.</p></div>}</section>
   <div class="data-grid debts-grid"><table>
     <thead><tr><th>Institución</th><th>Deuda</th><th>Tipo</th><th class="numeric">Monto original</th><th class="numeric">Saldo actual</th><th class="numeric">Tasa anual</th><th class="numeric">Cuota</th><th class="numeric">Avance</th><th>Acciones</th></tr></thead>
     <tbody>

@@ -1,1 +1,25 @@
-<app-header></app-header><main class="page"><div class="heading"><h1>Planeación</h1></div>@if(notice()){<div class="success">{{notice()}}</div>}@if(error()){<div class="error">{{error()}}</div>}<form class="panel settings-form" [formGroup]="settings" (ngSubmit)="saveSettings()"><h2>Reserva y perfil</h2><label>Reserva fija<input type="number" formControlName="safetyReserveAmount"></label><label>Modo<select formControlName="safetyReserveMode"><option value="FixedAmount">Monto fijo</option><option value="EssentialExpenseDays">Días esenciales</option><option value="HighestOfBoth">Mayor de ambos</option></select></label><label>Días esenciales<input type="number" formControlName="minimumDaysOfEssentialExpenses"></label><label>Perfil<select formControlName="defaultRecommendationProfile"><option value="Conservative">Conservador</option><option value="Balanced">Balanceado</option><option value="Aggressive">Agresivo</option></select></label><label>Moneda base<select formControlName="baseCurrency"><option value="HNL">Lempiras (L)</option><option value="USD">Dólares ($)</option></select></label><label class="check"><input type="checkbox" formControlName="allowEstimatedBalancesInRecommendations"> Permitir saldos estimados en recomendaciones</label><button type="submit">Guardar configuración</button></form></main>
+<app-header></app-header>
+<main class="page strategy-page">
+  <div class="heading strategy-heading"><div><h1>Protección y estrategia</h1><p class="strategy-subtitle">Define cuánto efectivo debe proteger Ruta Cero y qué tan agresivas pueden ser sus recomendaciones.</p></div></div>
+  @if(notice()){<div class="success">{{notice()}}</div>}
+  @if(error()){<div class="error">{{error()}}</div>}
+  <form class="strategy-form" [formGroup]="settings" (ngSubmit)="saveSettings()">
+    <section class="strategy-section">
+      <div class="section-intro"><h2>Protección de efectivo</h2><p>Ruta Cero nunca recomendará un abono que comprometa esta reserva.</p></div>
+      <div class="field-grid protection-fields">
+        <label>Modo<select formControlName="safetyReserveMode"><option value="FixedAmount">Monto fijo</option><option value="EssentialExpenseDays">Días de gastos esenciales</option><option value="HighestOfBoth">El mayor de ambos</option></select></label>
+        @if(mode==='FixedAmount'||mode==='HighestOfBoth'){<label>Reserva mínima<span class="money-input" [attr.data-symbol]="baseCurrency==='HNL'?'L':'$'"><input type="number" min="0" step="0.01" formControlName="safetyReserveAmount"></span></label>}
+        @if(mode==='EssentialExpenseDays'||mode==='HighestOfBoth'){<label>Días que quiero mantener cubiertos<span class="days-input"><input type="number" min="0" step="1" formControlName="minimumDaysOfEssentialExpenses"><span>días</span></span></label>}
+      </div>
+      @if(mode==='HighestOfBoth'){<p class="field-help mode-help">Ruta Cero utilizará el mayor monto calculado entre ambas opciones.</p>}
+      <aside class="reserve-result"><div><span>Reserva protegida actual</span><strong>{{protectedReserve|moneyFormat:baseCurrency}}</strong></div><div class="reserve-explanation"><p>Este dinero no será considerado disponible para abonos extraordinarios.</p>@if(mode==='EssentialExpenseDays'||mode==='HighestOfBoth'){<p>Equivale a {{settings.controls.minimumDaysOfEssentialExpenses.value}} días de tus gastos esenciales registrados.</p>}</div></aside>
+    </section>
+    <section class="strategy-section">
+      <div class="section-intro"><h2>Estrategia de salida</h2></div>
+      <div class="strategy-profile"><label>Perfil de recomendaciones<select formControlName="defaultRecommendationProfile"><option value="Conservative">Conservador</option><option value="Balanced">Balanceado</option><option value="Aggressive">Agresivo</option></select></label><p class="profile-help">@switch(profile){@case('Conservative'){Prioriza mantener mayor liquidez y recomienda abonos más pequeños.}@case('Aggressive'){Utiliza una mayor parte del efectivo libre para acelerar la reducción de deuda.}@default{Busca reducir deuda más rápido sin comprometer tu margen de seguridad.}}</p></div>
+      <label class="switch-row"><span class="switch-copy"><strong>Permitir saldos estimados</strong><small>Si está activo, Ruta Cero puede considerar deudas cuyo saldo actual todavía no ha sido confirmado.</small></span><span class="switch-control"><input type="checkbox" formControlName="allowEstimatedBalancesInRecommendations"><span aria-hidden="true"></span></span></label>
+    </section>
+    <section class="strategy-section preferences-section"><div class="section-intro"><h2>Preferencias</h2></div><label>Moneda base<select formControlName="baseCurrency"><option value="HNL">Lempiras (L)</option><option value="USD">Dólares ($)</option></select><small class="field-help">Esta preferencia no realiza conversiones automáticas entre monedas.</small></label></section>
+    <div class="form-actions"><button type="submit">Guardar estrategia</button></div>
+  </form>
+</main>

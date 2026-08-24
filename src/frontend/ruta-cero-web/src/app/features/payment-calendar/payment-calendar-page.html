@@ -6,17 +6,18 @@
   </div>
   @if(notice()){<div class="success">{{notice()}}</div>}
   @if(error()&&!showForm()){<div class="error">{{error()}}</div>}
-  <div class="data-grid calendar-grid"><table>
-    <thead><tr><th>Fecha máxima</th><th>Obligación</th><th>Tipo</th><th>Estado</th><th>Moneda</th><th class="numeric">Monto</th><th class="numeric">Pagado</th><th>Acciones</th></tr></thead>
+  <div class="mobile-view-tabs" role="tablist" aria-label="Vista de calendario"><button type="button" [class.active]="mobileView()==='agenda'" (click)="mobileView.set('agenda')">Agenda</button><button type="button" [class.active]="mobileView()==='month'" (click)="mobileView.set('month')">Mes</button></div>
+  @if(mobileView()==='agenda'){<section class="mobile-agenda">@for(item of items();track item.id){<article [class.overdue]="item.status==='Overdue'" [class.paid]="item.status==='Paid'"><time><strong>{{day(item.dueDate)}}</strong><span>{{month(item.dueDate)}}</span></time><div><strong>{{item.description}}</strong><span>{{typeLabel(item.type)}} · {{label(item.status)}}</span></div><b>{{(item.expectedAmount??item.minimumAmount??0)|moneyFormat:item.currency}}</b></article>}@empty{<div class="empty"><h2>No hay pagos programados</h2><p>Configura las fechas desde Deudas.</p></div>}</section>}
+  <div class="data-grid calendar-grid" [class.mobile-month-visible]="mobileView()==='month'"><table>
+    <thead><tr><th>Fecha máxima</th><th>Obligación</th><th>Tipo</th><th>Estado</th><th>Moneda</th><th class="numeric">Monto</th><th class="numeric">Pagado</th></tr></thead>
     <tbody>
       @for(item of items();track item.id){
-        <tr [class.overdue-row]="item.status==='Overdue'">
+        <tr [class.overdue-row]="item.status==='Overdue'" [class.paid-row]="item.status==='Paid'">
           <td data-label="Fecha máxima">{{item.dueDate}}</td><td data-label="Obligación"><strong>{{item.description}}</strong></td><td data-label="Tipo">{{typeLabel(item.type)}}</td><td data-label="Estado"><span class="status">{{label(item.status)}}</span></td><td data-label="Moneda">{{item.currency==='USD'?'$':'L'}}</td><td data-label="Monto" class="numeric"><strong>{{(item.expectedAmount??item.minimumAmount??0)|moneyFormat:item.currency}}</strong></td><td data-label="Pagado" class="numeric">{{item.paidAmount|moneyFormat:item.currency}}</td>
-          <td data-label="Acciones"><div class="row-actions">@if(item.status!=='Paid'&&(item.expectedAmount||item.minimumAmount)){<button class="icon-button" title="Marcar pagado" aria-label="Marcar pagado" (click)="pay(item)">&#10003;</button>}</div></td>
         </tr>
-      }@empty{<tr class="empty-row"><td colspan="8"><div class="empty"><h2>No hay pagos programados</h2><p>Configura el día de pago de tus tarjetas y préstamos desde Deudas.</p><a routerLink="/deudas">Configurar fechas de pago</a></div></td></tr>}
+      }@empty{<tr class="empty-row"><td colspan="7"><div class="empty"><h2>No hay pagos programados</h2><p>Configura el día de pago de tus tarjetas y préstamos desde Deudas.</p><a routerLink="/deudas">Configurar fechas de pago</a></div></td></tr>}
     </tbody>
-    <tfoot><tr><td colspan="8" class="grid-total">Total de registros: <strong>{{items().length}}</strong></td></tr></tfoot>
+    <tfoot><tr><td colspan="7" class="grid-total">Total de registros: <strong>{{items().length}}</strong></td></tr></tfoot>
   </table></div>
 </main>
 @if(showForm()){

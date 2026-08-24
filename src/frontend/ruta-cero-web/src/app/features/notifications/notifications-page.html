@@ -1,4 +1,23 @@
-﻿<app-header></app-header><main class="page"><div class="heading"><div><span class="eyebrow">CENTRO DE ALERTAS</span><h1>Notificaciones</h1><p>Recordatorios de pagos próximos, de hoy y vencidos.</p></div></div>@if(error()){<div class="error">{{error()}}</div>}<section class="panel movement-list">@for(x of items();track x.id){<article [class.unread]="!x.readAt" (click)="read(x)"><div><strong>{{x.title}}</strong><small>{{x.message}}</small></div><span class="status">{{x.readAt?'Leída':'Nueva'}}</span></article>}@empty{<div class="empty"><h2>Todo está al día</h2><p>No tienes notificaciones pendientes.</p></div>}</section></main>
-
-
-
+<app-header></app-header>
+<main class="page notifications-page">
+  <div class="heading"><div><h1>Notificaciones</h1></div><button type="button" [disabled]="!hasUnread()" (click)="readAll()">Marcar todo como leído</button></div>
+  @if(error()){<div class="error">{{error()}}</div>}
+  <section class="data-grid notifications-grid">
+    <table>
+      <thead><tr><th>Notificación</th><th>Detalle</th><th>Fecha</th><th>Estado</th></tr></thead>
+      <tbody>
+        @for(x of items();track x.id){
+          <tr [class.unread-row]="!x.readAt" (click)="read(x)" [attr.aria-label]="x.readAt?'Notificación leída':'Marcar notificación como leída'">
+            <td data-label="Notificación"><strong>{{x.title}}</strong></td>
+            <td data-label="Detalle">{{x.message}}</td>
+            <td data-label="Fecha">{{x.sentAt?(x.sentAt|date:'dd/MM/yyyy'):'—'}}</td>
+            <td data-label="Estado"><span class="notification-status" [class.new]="!x.readAt">{{x.readAt?'Leída':'Nueva'}}</span></td>
+          </tr>
+        }@empty{
+          <tr class="empty-row"><td colspan="4"><div class="empty"><h2>Todo está al día</h2><p>No tienes notificaciones pendientes.</p></div></td></tr>
+        }
+      </tbody>
+      @if(items().length){<tfoot><tr><td colspan="4" class="grid-total">Total de registros: <strong>{{items().length}}</strong></td></tr></tfoot>}
+    </table>
+  </section>
+</main>
